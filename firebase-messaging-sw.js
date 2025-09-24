@@ -12,17 +12,19 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// 백그라운드 표시
+// 브라우저가 이미 자동으로 배너를 띄움 → SW에서는 또 띄우지 않음
 messaging.onBackgroundMessage((payload) => {
-  const title = (payload.notification && payload.notification.title) || 'Alert';
+  if (payload.notification) return;
+
+  // data-only 메시지용(서버가 notification 없이 data만 보낼 때)
+  const title = (payload.data && payload.data.title) || 'Alert';
   const options = {
-    body: (payload.notification && payload.notification.body) || '',
+    body: (payload.data && payload.data.body) || '',
     data: payload.data || {},
   };
   self.registration.showNotification(title, options);
 });
 
-// 알림 클릭 시 열릴 URL
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = (event.notification && event.notification.data && event.notification.data.url) || './';
