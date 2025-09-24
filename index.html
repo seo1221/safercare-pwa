@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SaferCare Web Push</title>
+
+  <!-- PWA meta -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+
+  <style>
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    code, pre { background: #f6f8fa; padding: 8px 10px; border-radius: 6px; overflow-x: auto; }
+    button { padding: 10px 16px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; }
+    .ok { color: #0a7; }
+    .err { color: #e53; }
+    .muted { color: #667; }
+  </style>
+</head>
+<body>
+  <h1>SaferCare Web Push (FCM)</h1>
+  <ol>
+    <li>iPhone Safari로 이 페이지를 연 뒤 <b>공유 ▶︎ 홈 화면에 추가</b>로 설치하세요(필수).</li>
+    <li>홈화면에서 실행 후 <b>Enable</b>을 눌러 권한을 허용하세요.</li>
+    <li>발급된 FCM 토큰이 서버 <code>/register_token</code>에 자동 등록됩니다.</li>
+  </ol>
+
+  <p class="muted">※ 서버 주소는 <code>serverInfo.registerEndpoint</code> 한 줄만 바꾸면 됩니다.</p>
+
+  <p><button id="enable">Enable Notifications</button></p>
+  <p id="status"></p>
+  <pre id="out"></pre>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+
+    const firebaseConfig = {"apiKey": "AIzaSyCRkR_G3dOPNMmLG7KWgl2zJNshy5p3YZs", "authDomain": "alarmtest-13e42.firebaseapp.com", "projectId": "alarmtest-13e42", "storageBucket": "alarmtest-13e42.firebasestorage.app", "messagingSenderId": "685591126765", "appId": "1:685591126765:web:ae166348fbc661439062e4"};
+
+    const serverInfo = {
+      // ⬇️ 필요 시 여기 한 줄만 네 서버 주소로 바꾸세요
+      registerEndpoint: "http://192.168.123.104:8000/register_token",
+      bearerToken: "qwertyuiop"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const statusEl = document.getElementById('status');
+    const outEl = document.getElementById('out');
+
+    // 서비스워커를 "현재 폴더" 기준으로 등록(서브폴더 배포 안전)
+    const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+
+    // 지원 여부
+    const supported = await isSupported();
+    statusEl.innerHTML = supported
+      ? '<span class="ok">Browser supports FCM Web Push.</span>'
+      : '<span class="err">This browser does not support FCM Web Push.</span>';
+
+    async function enable() {
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') {
+          outEl.textContent = 'Permission denied.';
+          return;
+        }
+
+        const messaging = getMessaging(app);
+        const token = await getToken(messaging, {
+          vapidKey: "BAiBoxkRryzfRnCg8LSrSWYxs84DzE2P4V4nx1u3zPE42jRKMtuAXwmSqDtGyX1-ww2z0R3F-vpG7la9VKz_1q4",
+          serviceWorkerRegistration: swReg
+        });
+
+        outEl.textContent = "FCM token:\n" + token + "\n\n서버에 등록하는 중...";
+        const url = new URL(serverInfo.registerEndpoint);
+        url.searchParams.set("token", token);
+        const resp = await fetch(url.toString(), {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + serverInfo.bearerToken }
+        });
+        const data = await resp.json();
+        outEl.textContent += "\n등록 결과: " + JSON.stringify(data, null, 2);
+      } catch (err) {
+        console.error(err);
+        outEl.textContent = "에러: " + err;
+      }
+    }
+
+    document.getElementById('enable').addEventListener('click', enable);
+
+    // 포그라운드 메시지 로그
+    const messaging = getMessaging(app);
+    onMessage(messaging, (payload) => {
+      console.log('Foreground message:', payload);
+    });
+  </script>
+</body>
+</html>
