@@ -9,46 +9,33 @@
   <link rel="manifest" href="./manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-180.png" />
   <meta name="theme-color" content="#427825" />
 
   <style>
-    :root { --brand:#427825; }
     body {
       background:#fff; max-width: 780px; margin: 28px auto; padding: 0 16px;
-      font: 16px/1.6 ui-sans-serif, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:#111;
+      font: 16px/1.6 ui-sans-serif, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#111;
     }
     header { padding: 8px 0 12px; }
     header h1 { margin: 0; font-size: 28px; letter-spacing:-.3px; }
-    header p.lead { margin: 6px 0 0; color:#667085; }
-
     .card { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:16px; }
     .muted { color:#667085; }
-    .ok { color:#0a7; } .err { color:#d12; }
-
     .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
     .btn { appearance: none; border:1px solid #cbd5e1; background:#f8fafc; padding:10px 16px; border-radius:10px; cursor:pointer; }
-    .btn.primary { background:#427825; color:#fff; border-color:#427825; } /* 검정(무채)로, 네 버튼 색은 손대지 않음 */
-
+    .btn.primary { background:#427825; color:#fff; border-color:#427825; } /* 네 기존 버튼색 유지하고 싶으면 바꿔도 됨 */
     details { border:1px solid #e5e7eb; border-radius:14px; padding:12px 16px; background:#fff; }
     details > summary { cursor:pointer; font-weight:600; margin:-4px 0 8px; }
-
-    /* 긴 텍스트도 카드 안에서 줄바꿈 */
     #out { white-space: pre-wrap; overflow-wrap:anywhere; word-break:break-all; max-width:100%; }
-
-    footer { color:#98a2b3; font-size:13px; margin: 28px 0; }
   </style>
 </head>
 <body>
   <header>
     <h1>SaferCare</h1>
-    <p class="lead">현장의 이상 상황을 즉시 알려드려요.</p>
+    <p class="muted">현장의 이상 상황을 즉시 알려드려요.</p>
   </header>
 
-  <!-- 상태 카드: 상태에 따라 내용이 바뀜 -->
   <section id="stateCard" class="card">
-    <!-- 기본(미등록) 상태 -->
     <div id="state-off">
       <h2 style="margin:0 0 8px 0; font-size:20px;">실시간 알림</h2>
       <p class="muted" style="margin-top:0;">아래 버튼을 눌러 이 기기에 알림을 켜세요.</p>
@@ -66,11 +53,9 @@
           <li>홈 화면의 SaferCare 아이콘으로 실행합니다.</li>
           <li><b>알림 켜기</b> 버튼을 눌러 권한을 <b>허용</b>합니다.</li>
         </ol>
-        <p class="muted">설치 없이 브라우저 탭에서 보면 iOS에서 알림이 동작하지 않을 수 있어요.</p>
       </details>
     </div>
 
-    <!-- 등록 완료 상태 -->
     <div id="state-on" style="display:none;">
       <h2 style="margin:0 0 6px 0; font-size:20px;">알림 수신 중</h2>
       <p class="muted" style="margin-top:0;">이 기기는 SaferCare 알림을 받을 준비가 됐습니다.</p>
@@ -81,7 +66,6 @@
     </div>
   </section>
 
-  <!-- 숨김: 진단/로그 -->
   <section style="margin-top:16px;">
     <details>
       <summary>진단 정보</summary>
@@ -89,23 +73,20 @@
     </details>
   </section>
 
-  <footer>© SaferCare</footer>
-
-  <!-- 기능 로직 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getMessaging, getToken, isSupported, onMessage, deleteToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-    // 서버 주소 변경 시
+    // 서버 수정 시
     const serverInfo = {
       registerEndpoint: "https://exiguous-leroy-smilingly.ngrok-free.dev/register_token",
       bearerToken: "qwertyuiop",
     };
 
-    // 나중에 Looker Studio 주소로 바꾸기
-    const lookerURL = "https://lookerstudio.google.com/reporting/XXXX/view"; // TODO: 실제 링크로 교체
+    // 대시보드 링크
+    const lookerURL = "https://lookerstudio.google.com/reporting/XXXX/view";
 
-    // Firebase 설정(그대로)
+    // Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyCRkR_G3dOPNMmLG7KWgl2zJNshy5p3YZs",
       authDomain: "alarmtest-13e42.firebaseapp.com",
@@ -117,19 +98,25 @@
 
     const app = initializeApp(firebaseConfig);
     const supported = await isSupported();
-
     const stateOff = document.getElementById('state-off');
-    const stateOn = document.getElementById('state-on');
+    const stateOn  = document.getElementById('state-on');
     const statusEl = document.getElementById('status');
-    const outEl = document.getElementById('out');
+    const outEl    = document.getElementById('out');
     const openDashboard = document.getElementById('openDashboard');
 
-    // 서비스워커 등록 (서브폴더 안전)
+    // 서비스워커 등록
     const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+
+    // ✅ 기기ID: 최초 1회 생성 후 localStorage에 고정 보관
+    let deviceId = localStorage.getItem('sc_device_id');
+    if (!deviceId) {
+      deviceId = (crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) + '-web';
+      localStorage.setItem('sc_device_id', deviceId);
+    }
 
     function setUI(on) {
       stateOff.style.display = on ? 'none' : '';
-      stateOn.style.display = on ? '' : 'none';
+      stateOn.style.display  = on ? '' : 'none';
       if (on) openDashboard.href = lookerURL;
     }
 
@@ -138,13 +125,15 @@
       statusEl.textContent = '이 브라우저는 웹 알림을 지원하지 않습니다.';
     } else {
       const saved = localStorage.getItem('sc_push_token');
-      const perm = Notification.permission; // 'default' | 'denied' | 'granted'
+      const perm = Notification.permission;
       setUI(!!saved && perm === 'granted');
     }
 
-    async function registerToServer(token) {
+    async function registerToServer(token, prevToken) {
       const url = new URL(serverInfo.registerEndpoint);
       url.searchParams.set("token", token);
+      url.searchParams.set("device", deviceId);                            // 👈 같은 기기 중복 방지 핵심
+      if (prevToken && prevToken !== token) url.searchParams.set("prev", prevToken);
       const resp = await fetch(url.toString(), {
         method: "POST",
         headers: { "Authorization": "Bearer " + serverInfo.bearerToken }
@@ -161,8 +150,17 @@
         const vapidKey = "BAiBoxkRryzfRnCg8LSrSWYxs84DzE2P4V4nx1u3zPE42jRKMtuAXwmSqDtGyX1-ww2z0R3F-vpG7la9VKz_1q4";
         const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg });
 
+        const prev = localStorage.getItem('sc_push_token') || "";
+
+        // 동일 토큰이면 서버 호출 생략(멱등)
+        if (prev && prev === token) {
+          setUI(true);
+          statusEl.textContent = '이미 등록된 기기입니다.';
+          return;
+        }
+
         outEl.textContent = "토큰 발급 완료:\n" + token + "\n\n서버에 등록 중...";
-        const data = await registerToServer(token);
+        const data = await registerToServer(token, prev);
         outEl.textContent += "\n등록 결과: " + JSON.stringify(data, null, 2);
 
         localStorage.setItem('sc_push_token', token);
@@ -175,7 +173,7 @@
 
     document.getElementById('enable').addEventListener('click', enable);
 
-    // 재등록(토큰 초기화 후 다시 enable)
+    // 재등록(다른 브라우저/계정) — 토큰만 초기화, deviceId는 유지(같은 기기 중복 방지)
     document.getElementById('reEnable').addEventListener('click', async () => {
       try { const messaging = getMessaging(app); await deleteToken(messaging); } catch(e){}
       localStorage.removeItem('sc_push_token');
@@ -183,9 +181,7 @@
       statusEl.textContent = '다시 등록해 주세요.';
     });
 
-    // 포그라운드 메시지를 받으면 필요 시 대시보드로 이동 (원하면 주석 해제)
     onMessage(getMessaging(app), (payload) => {
-      // if (payload?.data?.url) location.href = payload.data.url;
       console.log('Foreground message:', payload);
     });
   </script>
