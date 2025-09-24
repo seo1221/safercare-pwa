@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="./icon-192.png" />
 
   <style>
-    :root { --brand:#9ce48eb3; }
+    :root { --brand:#427825c2; }
     body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
            max-width: 780px; margin: 40px auto; padding: 0 16px; line-height: 1.6; }
     h1 { font-size: 2rem; margin-bottom: .5rem; }
@@ -26,6 +26,8 @@
     button.primary { background: var(--brand); color:#fff; border-color: var(--brand); }
     details { border:1px solid #e5e7eb; border-radius:12px; padding:12px 16px; background:#fff; }
     details > summary { cursor:pointer; font-weight:600; }
+    html { background: #427825c2; }  /* 바깥(여백) 배경색 */
+    body { background: #fff; }  
   </style>
 </head>
 <body>
@@ -48,7 +50,7 @@
   <!-- 안내/설명(기존 문구 유지) -->
   <h2>설명</h2>
   <ol>
-    <li>이 페이지는 웹 알림 토큰을 발급하고 서버 <code>/register_token</code>에 등록합니다.</li>
+    <li>이 페이지는 웹 알림 토큰을 발급하고 서버에 등록합니다.</li>
     <li>서버 주소는 <code>serverInfo.registerEndpoint</code> 한 줄만 바꾸면 됩니다.</li>
   </ol>
 
@@ -64,7 +66,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-    // 🔧 네 프로젝트 값 그대로 (필요시 교체)
+    //프로젝트 값 그대로 (필요시 교체)
     const firebaseConfig = {
       apiKey: "AIzaSyCRkR_G3dOPNMmLG7KWgl2zJNshy5p3YZs",
       authDomain: "alarmtest-13e42.firebaseapp.com",
@@ -74,7 +76,7 @@
       appId: "1:685591126765:web:ae166348fbc661439062e4",
     };
 
-    // 🔧 서버 한 줄만 교체
+    //서버 한 줄만 교체
     const serverInfo = {
       registerEndpoint: "https://exiguous-leroy-smilingly.ngrok-free.dev/register_token",
       bearerToken: "qwertyuiop"
@@ -100,7 +102,7 @@
           return;
         }
         const messaging = getMessaging(app);
-        // 🔧 네 VAPID 공개키로 유지
+        // VAPID 공개키로 유지
         const vapidKey = "BAiBoxkRryzfRnCg8LSrSWYxs84DzE2P4V4nx1u3zPE42jRKMtuAXwmSqDtGyX1-ww2z0R3F-vpG7la9VKz_1q4";
         const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg });
 
