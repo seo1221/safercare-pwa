@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SaferCare Web Push</title>
+  <title>SaferCare 알림 설정</title>
 
   <!-- PWA meta -->
   <link rel="manifest" href="./manifest.json" />
@@ -12,36 +12,70 @@
   <link rel="apple-touch-icon" href="./icon-192.png" />
 
   <style>
-    body { font-family: system-ui, -apple-system, Arial, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
-    code, pre { background: #f6f8fa; padding: 8px 10px; border-radius: 6px; overflow-x: auto; }
-    button { padding: 10px 16px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; }
-    .ok { color: #0a7; }
-    .err { color: #e53; }
-    .muted { color: #667; }
+    :root { --brand:#9ce48eb3; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+           max-width: 780px; margin: 40px auto; padding: 0 16px; line-height: 1.6; }
+    h1 { font-size: 2rem; margin-bottom: .5rem; }
+    h2 { font-size: 1.25rem; margin-top: 2rem; }
+    code, pre { background: #f6f8fa; padding: 6px 8px; border-radius: 6px; }
+    .muted { color:#667085; }
+    .ok { color:#0a7; }
+    .err { color:#d12; }
+    .card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
+    button { padding: 10px 16px; border-radius: 10px; border: 1px solid #cbd5e1; cursor: pointer; }
+    button.primary { background: var(--brand); color:#fff; border-color: var(--brand); }
+    details { border:1px solid #e5e7eb; border-radius:12px; padding:12px 16px; background:#fff; }
+    details > summary { cursor:pointer; font-weight:600; }
   </style>
 </head>
 <body>
-  <h1>SaferCare Web Push (FCM)</h1>
+  <h1>SaferCare 알림 설정</h1>
+  <p class="muted">이 페이지에서 알림 권한을 허용하고, 기기를 SaferCare 푸시 알림에 등록할 수 있습니다.</p>
+
+  <!-- 아이폰 설정 방법 -->
+  <h2>아이폰 설정 방법</h2>
+  <details open>
+    <summary>단계 보기</summary>
+    <ol>
+      <li>Safari로 이 페이지를 엽니다.</li>
+      <li><b>공유</b> 버튼을 눌러 <b>홈 화면에 추가</b>로 설치합니다. (필수)</li>
+      <li>홈 화면의 SaferCare 아이콘으로 실행합니다.</li>
+      <li>아래 <b>알림 설정</b> 버튼을 눌러 권한을 <b>허용</b>합니다.</li>
+    </ol>
+    <p class="muted">설치 없이 브라우저 탭에서 보면 iOS에서 알림이 동작하지 않을 수 있어요.</p>
+  </details>
+
+  <!-- 안내/설명(기존 문구 유지) -->
+  <h2>설명</h2>
   <ol>
-    <li>iPhone Safari로 이 페이지를 연 뒤 <b>공유 ▶︎ 홈 화면에 추가</b>로 설치하세요(필수).</li>
-    <li>홈화면에서 실행 후 <b>Enable</b>을 눌러 권한을 허용하세요.</li>
-    <li>발급된 FCM 토큰이 서버 <code>/register_token</code>에 자동 등록됩니다.</li>
+    <li>이 페이지는 웹 알림 토큰을 발급하고 서버 <code>/register_token</code>에 등록합니다.</li>
+    <li>서버 주소는 <code>serverInfo.registerEndpoint</code> 한 줄만 바꾸면 됩니다.</li>
   </ol>
 
-  <p class="muted">※ 서버 주소는 <code>serverInfo.registerEndpoint</code> 한 줄만 바꾸면 됩니다.</p>
+  <div style="margin:20px 0;">
+    <button id="enable" class="primary">알림 설정</button>
+  </div>
 
-  <p><button id="enable">Enable Notifications</button></p>
-  <p id="status"></p>
-  <pre id="out"></pre>
+  <p id="status" class="muted"></p>
+  <pre id="out" class="card" style="min-height:48px;"></pre>
 
+  <!-- 기능 로직: 기존과 동일 (UI 텍스트만 바뀜) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
-    const firebaseConfig = {"apiKey": "AIzaSyCRkR_G3dOPNMmLG7KWgl2zJNshy5p3YZs", "authDomain": "alarmtest-13e42.firebaseapp.com", "projectId": "alarmtest-13e42", "storageBucket": "alarmtest-13e42.firebasestorage.app", "messagingSenderId": "685591126765", "appId": "1:685591126765:web:ae166348fbc661439062e4"};
+    // 🔧 네 프로젝트 값 그대로 (필요시 교체)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRkR_G3dOPNMmLG7KWgl2zJNshy5p3YZs",
+      authDomain: "alarmtest-13e42.firebaseapp.com",
+      projectId: "alarmtest-13e42",
+      storageBucket: "alarmtest-13e42.firebasestorage.app",
+      messagingSenderId: "685591126765",
+      appId: "1:685591126765:web:ae166348fbc661439062e4",
+    };
 
+    // 🔧 서버 한 줄만 교체
     const serverInfo = {
-      // ⬇️ 필요 시 여기 한 줄만 네 서버 주소로 바꾸세요
       registerEndpoint: "https://exiguous-leroy-smilingly.ngrok-free.dev/register_token",
       bearerToken: "qwertyuiop"
     };
@@ -50,30 +84,27 @@
     const statusEl = document.getElementById('status');
     const outEl = document.getElementById('out');
 
-    // 서비스워커를 "현재 폴더" 기준으로 등록(서브폴더 배포 안전)
+    // 서비스워커는 현재 폴더 기준(서브폴더 배포 안전)
     const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
 
-    // 지원 여부
     const supported = await isSupported();
     statusEl.innerHTML = supported
-      ? '<span class="ok">Browser supports FCM Web Push.</span>'
-      : '<span class="err">This browser does not support FCM Web Push.</span>';
+      ? '<span class="ok">이 브라우저는 웹 알림을 지원합니다.</span>'
+      : '<span class="err">이 브라우저에서는 웹 알림이 지원되지 않습니다.</span>';
 
     async function enable() {
       try {
         const perm = await Notification.requestPermission();
         if (perm !== 'granted') {
-          outEl.textContent = 'Permission denied.';
+          outEl.textContent = '알림 권한이 거부되었습니다.';
           return;
         }
-
         const messaging = getMessaging(app);
-        const token = await getToken(messaging, {
-          vapidKey: "BAiBoxkRryzfRnCg8LSrSWYxs84DzE2P4V4nx1u3zPE42jRKMtuAXwmSqDtGyX1-ww2z0R3F-vpG7la9VKz_1q4",
-          serviceWorkerRegistration: swReg
-        });
+        // 🔧 네 VAPID 공개키로 유지
+        const vapidKey = "BAiBoxkRryzfRnCg8LSrSWYxs84DzE2P4V4nx1u3zPE42jRKMtuAXwmSqDtGyX1-ww2z0R3F-vpG7la9VKz_1q4";
+        const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swReg });
 
-        outEl.textContent = "FCM token:\n" + token + "\n\n서버에 등록하는 중...";
+        outEl.textContent = "토큰 발급 완료:\n" + token + "\n\n서버에 등록 중...";
         const url = new URL(serverInfo.registerEndpoint);
         url.searchParams.set("token", token);
         const resp = await fetch(url.toString(), {
@@ -90,10 +121,11 @@
 
     document.getElementById('enable').addEventListener('click', enable);
 
-    // 포그라운드 메시지 로그
+    // 포그라운드 메시지 로그 (원하면 리다이렉트 처리 등 여기서)
     const messaging = getMessaging(app);
     onMessage(messaging, (payload) => {
       console.log('Foreground message:', payload);
+      // if (payload?.data?.url) location.href = payload.data.url; // 필요 시 활성화
     });
   </script>
 </body>
