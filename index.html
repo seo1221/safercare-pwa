@@ -27,6 +27,11 @@
     button.primary { background: var(--brand); color:#fff; border-color: var(--brand); }
     details { border:1px solid #e5e7eb; border-radius:12px; padding:12px 16px; background:#fff; }
     details > summary { cursor:pointer; font-weight:600; }
+    #out{
+      white-space: pre-wrap;     /* 줄바꿈 허용 */
+      overflow-wrap: anywhere;   /* 단어 중간이라도 줄바꿈 */
+      word-break: break-all;     /* 구형 브라우저 대비 */
+      max-width: 100%;
   </style>
 </head>
 <body>
