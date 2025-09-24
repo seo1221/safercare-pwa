@@ -105,7 +105,7 @@
     const openDashboard = document.getElementById('openDashboard');
 
     // 서비스워커 등록
-    const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js?v=3');
 
     // ✅ 기기ID: 최초 1회 생성 후 localStorage에 고정 보관
     let deviceId = localStorage.getItem('sc_device_id');
