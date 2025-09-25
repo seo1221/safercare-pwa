@@ -81,7 +81,7 @@
     // 서버 수정 시
     const serverInfo = {
       registerEndpoint: "https://exiguous-leroy-smilingly.ngrok-free.dev/register_token",
-      bearerToken: "qwertyuiop",
+      bearerToken: "qwerty",
     };
 
     // 대시보드 링크
@@ -108,7 +108,7 @@
     // 서비스워커 등록
     const swReg = await navigator.serviceWorker.register('./firebase-messaging-sw.js?v=3');
 
-    // ✅ 기기ID: 최초 1회 생성 후 localStorage에 고정 보관
+    // 기기ID: 최초 1회 생성 후 localStorage에 고정 보관
     let deviceId = localStorage.getItem('sc_device_id');
     if (!deviceId) {
       deviceId = (crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) + '-web';
@@ -133,7 +133,7 @@
     async function registerToServer(token, prevToken) {
       const url = new URL(serverInfo.registerEndpoint);
       url.searchParams.set("token", token);
-      url.searchParams.set("device", deviceId);                            // 👈 같은 기기 중복 방지 핵심
+      url.searchParams.set("device", deviceId);                            // 같은 기기 중복 방지 핵심
       if (prevToken && prevToken !== token) url.searchParams.set("prev", prevToken);
       const resp = await fetch(url.toString(), {
         method: "POST",
